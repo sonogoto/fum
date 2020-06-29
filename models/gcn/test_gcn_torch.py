@@ -39,7 +39,7 @@ class TestGcn(unittest.TestCase):
             input_dim=self.feature.size(1),
             hidden_dims=[32, 32],
             out_dim=2,
-            gcn_style="mm"
+            gcn_impl="mm"
         )
         adj_mat = MMGCNLayer.edgeidx2adjmat(
             edge_idx=self.edge_index,
@@ -68,7 +68,7 @@ class TestGcn(unittest.TestCase):
             input_dim=self.feature.size(1),
             hidden_dims=[32, 32],
             out_dim=2,
-            gcn_style="mm"
+            gcn_impl="mm"
         )
         adj_mat = MMGCNLayer.edgeidx2adjmat(
             edge_idx=self.edge_index,

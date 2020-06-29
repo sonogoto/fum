@@ -68,25 +68,25 @@ class GCNNet(torch.nn.Module):
                  input_dim,
                  hidden_dims,
                  out_dim=1,
-                 gcn_style="mp",
+                 gcn_impl="mp",
                  **kwargs):
         """
         :param input_dim: dimension of the input features
         :param hidden_dims: list or other iterables, dimensions of the GCN layers
         :param out_dim: out dimension of the linear layer, default to 1
-        :param gcn_style: `mp` stands for massage passing style and
+        :param gcn_impl: `mp` stands for massage passing style and
                             'mm' for matrix multiplication style, default to `mp`
         :param kwargs: args passed to `GCNConv.__init__`
         """
         super(GCNNet, self).__init__()
         self._input_dim = input_dim
         self._out_dim = out_dim
-        if gcn_style == "mp":
+        if gcn_impl == "mp":
             GCNClass = MPGCNLayer
-        elif gcn_style == "mm":
+        elif gcn_impl == "mm":
             GCNClass = MMGCNLayer
         else:
-            raise RuntimeError("invalid gcn_style: [%s]" % gcn_style)
+            raise RuntimeError("invalid gcn_style: [%s]" % gcn_impl)
         self._gcn_layers = nn.ModuleList(
             [GCNClass(in_channels=input_dim, out_channels=hidden_dims[0], **kwargs)]
         )
@@ -127,17 +127,17 @@ class GCNConcatNet(GCNNet):
                  input_dim,
                  hidden_dims,
                  out_dim=1,
-                 gcn_style="mp",
+                 gcn_impl="mp",
                  **kwargs):
         super(GCNNet, self).__init__()
         self._input_dim = input_dim
         self._out_dim = out_dim
-        if gcn_style == "mp":
+        if gcn_impl == "mp":
             GCNClass = MPGCNLayer
-        elif gcn_style == "mm":
+        elif gcn_impl == "mm":
             GCNClass = MMGCNLayer
         else:
-            raise RuntimeError("invalid gcn_style: [%s]" % gcn_style)
+            raise RuntimeError("invalid gcn_style: [%s]" % gcn_impl)
         self._gcn_layers = nn.ModuleList(
             [GCNClass(in_channels=input_dim, out_channels=hidden_dims[0], **kwargs)]
         )
