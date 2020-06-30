@@ -6,7 +6,7 @@ from torch.nn.parameter import Parameter
 from torch.sparse import mm as sparse_dense_mat_mul
 from torch_geometric.nn.conv import GCNConv as MPGCNLayer
 from torch_geometric.nn.inits import glorot, zeros
-from collections import Counter
+from utils import edgeidx2adjmat
 
 
 class MMGCNLayer(nn.Module):
@@ -32,32 +32,6 @@ class MMGCNLayer(nn.Module):
         return sparse_dense_mat_mul(
             adj_mat, torch.mm(x, self.weight)
         ) + self.bias
-
-    @staticmethod
-    def edgeidx2adjmat(edge_idx, node_count, add_self_loop=True, edge_weight=None):
-        """directed graph not support yet"""
-        node_degree = Counter(edge_idx[0])
-        data = []
-        for i in range(len(edge_idx[0])):
-            d_i = node_degree[edge_idx[0][i]]
-            d_j = node_degree[edge_idx[1][i]]
-            if d_j == 0:
-                raise RuntimeError("directed graph not support yet")
-            weight = edge_weight[i] if edge_weight else 1
-            data.append((d_i*d_j)**-.5 * weight)
-        if add_self_loop:
-            for i in range(node_count):
-                edge_idx[0].append(i)
-                edge_idx[1].append(i)
-                if node_degree[i] == 0:
-                    data.append(1)
-                else:
-                    data.append(node_degree[i]**-.5)
-        return torch.sparse.FloatTensor(
-            indices=torch.LongTensor(edge_idx),
-            values=torch.FloatTensor(data),
-            size=(node_count, node_count)
-        )
 
 
 class GCNNet(torch.nn.Module):
@@ -119,6 +93,15 @@ class GCNNet(torch.nn.Module):
         if mask is not None:
             x = x[mask]
         return x.cpu().detach().numpy()
+
+    @staticmethod
+    def edgeidx2adjmat(edge_idx, node_count, add_self_loop=True, edge_weight=None):
+        indices, values = edgeidx2adjmat(edge_idx, node_count, add_self_loop, edge_weight)
+        return torch.sparse.FloatTensor(
+            indices=torch.LongTensor(indices),
+            values=torch.FloatTensor(values),
+            size=(node_count, node_count)
+        )
 
 
 class GCNConcatNet(GCNNet):

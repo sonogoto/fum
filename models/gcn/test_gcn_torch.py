@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from gcn_torch import MMGCNLayer, GCNNet, GCNConcatNet
+from gcn_torch import GCNNet, GCNConcatNet
 import numpy as np
 import unittest
 import torch
@@ -20,7 +20,8 @@ class TestGcn(unittest.TestCase):
             self.edge_index = [e1+e2, e2+e1]
 
     def test_edgeidx2adjmat(self):
-        MMGCNLayer.edgeidx2adjmat(self.edge_index, node_count=1000)
+        GCNNet.edgeidx2adjmat(self.edge_index, node_count=1000)
+        GCNConcatNet.edgeidx2adjmat(self.edge_index, node_count=1000)
 
     def test_gcn_mp(self):
         gcn = GCNNet(
@@ -41,7 +42,7 @@ class TestGcn(unittest.TestCase):
             out_dim=2,
             gcn_impl="mm"
         )
-        adj_mat = MMGCNLayer.edgeidx2adjmat(
+        adj_mat = GCNNet.edgeidx2adjmat(
             edge_idx=self.edge_index,
             node_count=1000,
             edge_weight=torch.randn(self.edge_index[0].__len__()).tolist()
@@ -70,7 +71,7 @@ class TestGcn(unittest.TestCase):
             out_dim=2,
             gcn_impl="mm"
         )
-        adj_mat = MMGCNLayer.edgeidx2adjmat(
+        adj_mat = GCNConcatNet.edgeidx2adjmat(
             edge_idx=self.edge_index,
             node_count=1000,
             edge_weight=torch.randn(self.edge_index[0].__len__()).tolist()
