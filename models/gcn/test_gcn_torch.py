@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from gcn_torch import GCNNet, GCNConcatNet
+from gcn_torch import GCNNet, GCNConcatNet, StructEXGCNNet
 import numpy as np
 import unittest
 import torch
@@ -79,6 +79,14 @@ class TestGcn(unittest.TestCase):
         _ = gcn(
             features=self.feature,
             edge=adj_mat
+        )
+
+    def test_struct_ex_gcn(self):
+        gcn = StructEXGCNNet(self.feature.size(1), 5)
+        _ = gcn(
+            features=self.feature,
+            edge=torch.tensor(self.edge_index, dtype=torch.long),
+            edge_weight=torch.randn(self.edge_index[0].__len__())
         )
 
 

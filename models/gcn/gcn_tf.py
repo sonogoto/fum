@@ -21,7 +21,7 @@ class GCNLayer(tf.Module):
         y = tf.sparse_tensor_dense_matmul(
             adj_mat,
             tf.matmul(x, self.weight)
-        )
+        ) + self.bias
         return self.activation(y)
 
 
@@ -138,6 +138,54 @@ class GCNConcatNet(GCNNet):
         if mask is not None:
             x = x[mask]
         return x
+
+
+class GCNIdentical(tf.Module):
+
+    def __init__(self, name=None, activation=None):
+        super(GCNIdentical, self).__init__(name)
+        self.activation = activations.get(activation)
+
+    def __call__(self, x, adj_mat):
+        y = tf.sparse_tensor_dense_matmul(
+            adj_mat,
+            x
+        )
+        return self.activation(y)
+
+
+class StructEXGCNNet(tf.Module):
+
+    edgeidx2adjmat = GCNNet.edgeidx2adjmat
+
+    def __init__(self,
+                 num_layers=3,
+                 name=None,
+                 activation=None):
+        """
+        :param num_layers: the number of gcn layers, default to 3
+        :param name:  the name of GCN net
+        :param activation: the activate function
+        """
+        super(StructEXGCNNet, self).__init__(name)
+        self._gcn_layers = [
+            GCNIdentical(name="gcn_1", activation=activation)
+        ]
+        for idx in range(1, num_layers):
+            self._gcn_layers.append(
+                GCNIdentical(name="gcn_%d" % (idx+1), activation=activation)
+            )
+
+    def __call__(self, features, adj_mat, mask=None):
+        x = features
+        out = [x, ]
+        for gcn_layer in self._gcn_layers:
+            x = gcn_layer(x, adj_mat)
+            out.append(x)
+        out = tf.concat(out, axis=1)
+        if mask is not None:
+            out = out[mask]
+        return out
 
 
 if __name__ == "__main__":

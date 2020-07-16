@@ -146,6 +146,49 @@ class GCNConcatNet(GCNNet):
         return self._fc(x)
 
 
+class GCNIdentical(MPGCNLayer):
+
+    def reset_parameters(self):
+        self.weight.data = torch.eye(self.in_channels)
+        self.bias.data.fill_(0)
+        self.cached_result = None
+        self.cached_num_edges = None
+
+
+class StructEXGCNNet(torch.nn.Module):
+    """GCN used to extract local neighbours structural of nodes"""
+    def __init__(self,
+                 in_dim,
+                 num_layers=3,
+                 **kwargs):
+        """
+        :param in_dim: the dimension of features
+        :param num_layers: the number of gcn layers, default to 3
+        :param kwargs: args passed to `GCNConv.__init__`
+        """
+        super(StructEXGCNNet, self).__init__()
+        self._in_dim = in_dim
+        self._num_layers = num_layers
+        self._gcn_layers = torch.nn.ModuleList(
+            [GCNIdentical(in_channels=in_dim, out_channels=in_dim, **kwargs)]
+        )
+        for _ in range(1, num_layers):
+            self._gcn_layers.append(
+                GCNIdentical(in_channels=in_dim, out_channels=in_dim, **kwargs)
+            )
+
+    def forward(self, features, edge, edge_weight=None, mask=None):
+        x = features
+        out = [x, ]
+        for gcn_layer in self._gcn_layers:
+            x = torch.relu(gcn_layer(x, edge, edge_weight))
+            out.append(x)
+        out = torch.cat(out, dim=1)
+        if mask is not None:
+            out = out[mask]
+        return out
+
+
 if __name__ == '__main__':
     pass
 

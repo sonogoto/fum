@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 
-from gcn_tf import GCNNet, GCNConcatNet
+from gcn_tf import GCNNet, GCNConcatNet, StructEXGCNNet
 import unittest
 import tensorflow as tf
 import numpy as np
@@ -27,13 +27,13 @@ class TestGcn(unittest.TestCase):
         except:
             pass
 
-    def _test_core(self, cls, **kwargs):
+    def _test_core(self, cls, dim0=1000, dim1=2, **kwargs):
         adj_mat = cls.edgeidx2adjmat(self.edge_index, 1000)
         out = cls(**kwargs)(self.feature, adj_mat)
         self._sess.run(tf.global_variables_initializer())
         out_np = self._sess.run(out)
-        assert out_np.shape[0] == 1000
-        assert out_np.shape[1] == 2
+        assert out_np.shape[0] == dim0
+        assert out_np.shape[1] == dim1
 
     def test_gcn(self):
         self._test_core(
@@ -52,6 +52,15 @@ class TestGcn(unittest.TestCase):
             hidden_dims=[32, 32],
             out_dim=2,
             name="gcn_concat_net",
+            activation="relu"
+        )
+
+    def test_struct_ex_gcn(self):
+        self._test_core(
+            StructEXGCNNet,
+            dim1=self.feature.shape[1]*4,
+            num_layers=3,
+            name="struct_ex_net",
             activation="relu"
         )
 
